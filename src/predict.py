@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import whisperx
 from pyannote.audio import Pipeline
+import pandas as pd
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -59,14 +60,7 @@ class Predictor:
         audio_data = whisperx.load_audio(audio)
 
         logging.info("Transcribing")
-        transcribe_params = {
-            "language": language,
-            "batch_size": batch_size
-        }
-        # transcribe_params.update(kwargs)  # Добавляем все дополнительные параметры
         result = model_data.transcribe(audio_data, batch_size=batch_size, **kwargs)
-
-        # result = model_data.transcribe(audio_data, **transcribe_params)
         logging.debug(f"Transcription result: {json.dumps(result, indent=2)}")
         
         if language is None:
@@ -102,19 +96,11 @@ class Predictor:
                 logging.info(f"Diarization result type: {type(diarization)}")
                 logging.info(f"Diarization result: {diarization}")
                 
-                # Преобразование результатов диаризации в формат, ожидаемый whisperx
-                diarize_dict = self.convert_diarization_to_dict(diarization)
-                logging.info(f"Converted diarization dataframe: {diarize_dict}")
+                diarize_df = self.convert_diarization_to_dataframe(diarization)
+                logging.info(f"Converted diarization dataframe: {diarize_df}")
                 
                 logging.info("Assigning word speakers")
-                result = whisperx.assign_word_speakers(diarize_dict, result)
-                logging.info(f"Result after speaker assignment: {json.dumps(result, indent=2)}")
-
-                diarization = self.diarization_pipeline(audio, **diarize_kwargs)
-                logging.info(f"Diarization result: {diarization}")
-                
-                logging.info("Assigning word speakers")
-                result = whisperx.assign_word_speakers(diarization, result)
+                result = whisperx.assign_word_speakers(diarize_df, result)
                 logging.info(f"Result after speaker assignment: {json.dumps(result, indent=2)}")
             except Exception as e:
                 logging.error(f"Error during diarization or speaker assignment: {str(e)}")
@@ -123,26 +109,21 @@ class Predictor:
         logging.info("Formatting result")
         return self.format_result(result)
 
-    def convert_diarization_to_dict(self, diarization):
+    def convert_diarization_to_dataframe(self, diarization):
         segments = []
-        for segment, track, speaker in diarization.itertracks(yield_label=True):
+        for segment, _, speaker in diarization.itertracks(yield_label=True):
             segments.append({
-                'start': segment.start,
-                'end': segment.end,
-                'speaker': speaker,
-                'word': ''  # Добавляем пустое слово, так как это требуется для assign_word_speakers
+                'segment': segment,
+                'speaker': speaker
             })
         
-        # Сортируем сегменты по времени начала
-        segments.sort(key=lambda x: x['start'])
+        df = pd.DataFrame(segments)
+        df['start'] = df['segment'].apply(lambda x: x.start)
+        df['end'] = df['segment'].apply(lambda x: x.end)
+        df = df.sort_values('start')
         
-        diarize_dict = {
-            'segments': segments,
-            'word_segments': segments  # whisperx может ожидать это поле
-        }
-        
-        logging.debug(f"Converted diarization dict: {json.dumps(diarize_dict, indent=2)}")
-        return diarize_dict
+        logging.debug(f"Converted diarization dataframe: {df}")
+        return df
 
     def format_result(self, result):
         try:
