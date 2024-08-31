@@ -44,15 +44,10 @@ def run_whisperx_job(job):
         audio_input = base64_to_tempfile(job_input['audio_base64'])
 
     with rp_debugger.LineTimer('prediction_step'):
-        whisperx_results = MODEL.predict(
-            audio=audio_input,
-            model_name=job_input["model"],
-            language=job_input["language"],
-            diarize=job_input["diarize"],
-            min_speakers=job_input["min_speakers"],
-            max_speakers=job_input["max_speakers"],
-            # Add other parameters as needed
-        )
+        predict_params = {k: v for k, v in job_input.items() if k != "audio" and k != "audio_base64"}
+
+        whisperx_results = MODEL.predict(audio=audio_input, **predict_params)
+            
 
     with rp_debugger.LineTimer('cleanup_step'):
         rp_cleanup.clean(['input_objects'])
