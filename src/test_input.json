@@ -1,0 +1,10 @@
+{
+    "input": {
+        "audio": "https://www.zamzar.com/download.php?uid=f37311e5b949941d121956e4eda1b-625c4c5ad874358&tcs=Z99&fileID=p1i6jiv4g74h416as7qn128a1884.wav",
+        "diarize": true,
+        "model": "tiny",
+        "language": "ru",
+        "min_speakers": 1,
+        "max_speakers": 5
+    }
+}

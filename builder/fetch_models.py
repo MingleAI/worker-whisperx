@@ -6,7 +6,7 @@ from pyannote.audio import Pipeline
 from huggingface_hub import hf_hub_download
 
 whisper_model_names = ["tiny"]#TODO"large-v2", "large-v3"]
-alignment_language_codes = []#"en", "fr", "de", "es", "it", "ja", "zh", "nl", "uk", "pt"]
+alignment_language_codes = ["en", "ru"]#"en", "fr", "de", "es", "it", "ja", "zh", "nl", "uk", "pt"]
 
 def load_whisper_model(selected_model):
     print(f"Loading Whisper model: {selected_model}")

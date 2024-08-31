@@ -65,16 +65,10 @@ COPY src .
 # Make port 80 available to the world outside this container
 # EXPOSE 80
 
-# Create a script to run the application and tests
-RUN echo '#!/bin/bash\n\
-if [ "$1" = "test" ]; then\n\
-  pytest test_runpod_whisper.py\n\
-else\n\
-  python rp_handler.py\n\
-fi' > ./run.sh && chmod +x ./run.sh
+RUN chmod +x /endpoint.sh
 
 # Set the script as the entry point
-ENTRYPOINT ["/run.sh"]
+ENTRYPOINT ["/endpoint.sh"]
 
 # By default, run the application
 CMD []

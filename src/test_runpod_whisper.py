@@ -1,7 +1,7 @@
 import unittest
 import json
 import base64
-from rp_handler import run_whisper_job
+from rp_handler import run_whisperx_job
 
 class TestRunpodWhisper(unittest.TestCase):
     def test_run_whisper_job(self):
@@ -20,7 +20,7 @@ class TestRunpodWhisper(unittest.TestCase):
         }
         
         # Run the job
-        result = run_whisper_job(job_input)
+        result = run_whisperx_job(job_input)
         
         # Check the result
         self.assertIn('transcription', result)
