@@ -1,0 +1,76 @@
+name: Docker Build and Deploy to RunPod
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOCKER_REPO: minglesai/runpod
+  RUNPOD_API_KEY: ${{ secrets.RUNPOD_API_KEY }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: Cache ML models
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/huggingface
+        key: ${{ runner.os }}-huggingface-${{ hashFiles('**/fetch_models.py') }}
+        restore-keys: |
+          ${{ runner.os }}-huggingface-
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: ${{ env.DOCKER_REPO }}:${{ github.sha }}
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
+          HUGGING_FACE_HUB_TOKEN=${{ secrets.HUGGING_FACE_HUB_TOKEN }}
+
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  deploy-to-runpod:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy to RunPod
+      run: |
+        curl -X POST "https://api.runpod.io/v2/deployments" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer ${{ env.RUNPOD_API_KEY }}" \
+        -d '{
+          "name": "whisperx-deployment",
+          "imageName": "${{ env.DOCKER_REPO }}:${{ github.sha }}",
+          "deploymentType": "GPU",
+          "gpuCount": 1
+        }'

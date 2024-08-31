@@ -12,96 +12,27 @@ INPUT_VALIDATIONS = {
     'model': {
         'type': str,
         'required': False,
-        'default': 'base'
-    },
-    'transcription': {
-        'type': str,
-        'required': False,
-        'default': 'plain_text'
-    },
-    'translate': {
-        'type': bool,
-        'required': False,
-        'default': False
-    },
-    'translation': {
-        'type': str,
-        'required': False,
-        'default': 'plain_text'
+        'default': 'large-v2'
     },
     'language': {
         'type': str,
         'required': False,
         'default': None
     },
-    'temperature': {
-        'type': float,
+    'diarize': {
+        'type': bool,
         'required': False,
-        'default': 0
+        'default': False
     },
-    'best_of': {
+    'min_speakers': {
         'type': int,
-        'required': False,
-        'default': 5
-    },
-    'beam_size': {
-        'type': int,
-        'required': False,
-        'default': 5
-    },
-    'patience': {
-        'type': float,
-        'required': False,
-        'default': 1.0
-    },
-    'length_penalty': {
-        'type': float,
-        'required': False,
-        'default': 0
-    },
-    'suppress_tokens': {
-        'type': str,
-        'required': False,
-        'default': '-1'
-    },
-    'initial_prompt': {
-        'type': str,
         'required': False,
         'default': None
     },
-    'condition_on_previous_text': {
-        'type': bool,
+    'max_speakers': {
+        'type': int,
         'required': False,
-        'default': True
+        'default': None
     },
-    'temperature_increment_on_fallback': {
-        'type': float,
-        'required': False,
-        'default': 0.2
-    },
-    'compression_ratio_threshold': {
-        'type': float,
-        'required': False,
-        'default': 2.4
-    },
-    'logprob_threshold': {
-        'type': float,
-        'required': False,
-        'default': -1.0
-    },
-    'no_speech_threshold': {
-        'type': float,
-        'required': False,
-        'default': 0.6
-    },
-    'enable_vad': {
-        'type': bool,
-        'required': False,
-        'default': False
-    },
-    'word_timestamps': {
-        'type': bool,
-        'required': False,
-        'default': False
-    },
+    # Add other parameters as needed
 }

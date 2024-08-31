@@ -42,13 +42,39 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r /requirements.txt --no-cache-dir && \
     rm /requirements.txt
 
+# Set Hugging Face token as environment variable
+ENV HUGGING_FACE_HUB_TOKEN="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"
+
 # Copy and run script to fetch models
 COPY builder/fetch_models.py /fetch_models.py
-RUN python /fetch_models.py && \
+RUN --mount=type=cache,target=/root/.cache/huggingface \
+    --mount=type=cache,target=/root/.cache/whisper \
+    python /fetch_models.py && \
     rm /fetch_models.py
+
+
+# Set default command
+# CMD python -u /rp_handler.py
+
+# Install additional packages for testing
+RUN pip install pytest requests
 
 # Copy source code into image
 COPY src .
 
-# Set default command
-CMD python -u /rp_handler.py
+# Make port 80 available to the world outside this container
+# EXPOSE 80
+
+# Create a script to run the application and tests
+RUN echo '#!/bin/bash\n\
+if [ "$1" = "test" ]; then\n\
+  pytest test_runpod_whisper.py\n\
+else\n\
+  python rp_handler.py\n\
+fi' > ./run.sh && chmod +x ./run.sh
+
+# Set the script as the entry point
+ENTRYPOINT ["/run.sh"]
+
+# By default, run the application
+CMD []

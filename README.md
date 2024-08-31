@@ -79,3 +79,6 @@ The following inputs can be used for testing the model:
     "translation_time": 0.7796223163604736
 }
 ```
+
+
+DOCKER_BUILDKIT=1 docker build -t minglesai/runpod:v1 .
