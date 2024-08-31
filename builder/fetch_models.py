@@ -1,25 +1,20 @@
 from concurrent.futures import ThreadPoolExecutor
 import os
-from faster_whisper import WhisperModel
 import whisperx
 from pyannote.audio import Pipeline
 from huggingface_hub import hf_hub_download
 
-whisper_model_names = ["tiny"]#TODO"large-v2", "large-v3"]
-alignment_language_codes = ["en", "ru"]#"en", "fr", "de", "es", "it", "ja", "zh", "nl", "uk", "pt"]
+whisper_model_names = ["large-v2", "large-v3"]
+alignment_language_codes = ["ru", "en", "fr", "de", "es", "it", "ja", "zh", "nl", "uk", "pt"]
 
-def load_whisper_model(selected_model):
-    print(f"Loading Whisper model: {selected_model}")
-    for _attempt in range(5):
+def load_whisper_model():
+    for model_name in whisper_model_names:
+        print(f"Downloading files for model: {model_name}")
         try:
-            loaded_model = WhisperModel(selected_model, device="cpu", compute_type="int8")
-            print(f"Whisper model {selected_model} loaded successfully")
-            return selected_model, loaded_model
-        except (AttributeError, OSError) as e:
-            print(f"Attempt to load {selected_model} failed: {str(e)}")
-    
-    print(f"Failed to load Whisper model {selected_model} after 5 attempts")
-    return selected_model, None
+            whisperx.download_model(model_name)
+            print(f"Successfully downloaded files for model: {model_name}")
+        except Exception as e:
+            print(f"Failed to download files for model {model_name}: {str(e)}")
 
 def load_alignment_model(language_code):
     print(f"Loading alignment model for language: {language_code}")
@@ -58,10 +53,7 @@ diarization_model = None
 huggingface_models = {}
 
 # Load Whisper models
-with ThreadPoolExecutor() as executor:
-    for model_name, model in executor.map(load_whisper_model, whisper_model_names):
-        if model is not None:
-            whisper_models[model_name] = model
+load_whisper_model()
 
 # Load alignment models
 with ThreadPoolExecutor() as executor:

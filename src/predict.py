@@ -3,6 +3,7 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import torch
+import os
 import whisperx
 from pyannote.audio import Pipeline
 import pandas as pd
@@ -20,22 +21,21 @@ class Predictor:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         logging.info(f"Using device: {device}")
         compute_type = "float16" if torch.cuda.is_available() else "int8"
-        model_names = ["tiny"]
+        model_names = ["large-v2", "large-v3"]
         
         for model_name in model_names:
             logging.info(f"Loading model: {model_name}")
-            self.models[model_name] = whisperx.load_model(model_name, device, compute_type=compute_type,
+            self.models[model_name] = whisperx.load_model(model_name, device, language="en" compute_type=compute_type,
                 asr_options={
                     "max_new_tokens": 128,
                     "clip_timestamps": True,
-                    "hallucination_silence_threshold": 2.0
+                    "hallucination_silence_threshold": 2.0,
+                    "hotwords": []
                 })
         
         logging.info("Loading diarization pipeline")
-        self.diarization_pipeline = Pipeline.from_pretrained(
-            "pyannote/speaker-diarization-3.1",
-            use_auth_token="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"
-        )
+        self.diarization_pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1",
+                                         use_auth_token=os.environ.get("HUGGING_FACE_HUB_TOKEN"))
         if device == "cuda":
             self.diarization_pipeline.to(torch.device("cuda"))
         logging.info("Setup completed")
@@ -43,7 +43,7 @@ class Predictor:
     def predict(
         self,
         audio,
-        model="tiny",
+        model,
         language=None,
         diarize=False,
         min_speakers=None,
@@ -97,11 +97,11 @@ class Predictor:
                 logging.info(f"Diarization result: {diarization}")
                 
                 diarize_df = self.convert_diarization_to_dataframe(diarization)
-                logging.info(f"Converted diarization dataframe: {diarize_df}")
+                logging.debug(f"Converted diarization dataframe: {diarize_df}")
                 
                 logging.info("Assigning word speakers")
                 result = whisperx.assign_word_speakers(diarize_df, result)
-                logging.info(f"Result after speaker assignment: {json.dumps(result, indent=2)}")
+                logging.debug(f"Result after speaker assignment: {json.dumps(result, indent=2)}")
             except Exception as e:
                 logging.error(f"Error during diarization or speaker assignment: {str(e)}")
                 raise

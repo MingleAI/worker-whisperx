@@ -52,23 +52,7 @@ RUN --mount=type=cache,target=/root/.cache/huggingface \
     python /fetch_models.py && \
     rm /fetch_models.py
 
-
-# Set default command
-# CMD python -u /rp_handler.py
-
-# Install additional packages for testing
-RUN pip install pytest requests
-RUN pip install -U git+https://github.com/m-bain/whisperX.git@78dcfaab51005aa703ee21375f81ed31bc248560
-# Copy source code into image
 COPY src .
 
-# Make port 80 available to the world outside this container
-# EXPOSE 80
-
-RUN chmod +x /endpoint.sh
-
-# Set the script as the entry point
-ENTRYPOINT ["/endpoint.sh"]
-
-# By default, run the application
-CMD []
+# Set default command
+CMD python -u /rp_handler.py
