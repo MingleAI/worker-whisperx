@@ -14,6 +14,7 @@ class Predictor:
     def __init__(self):
         self.models = {}
         self.align_models = {}
+        self.align_metadata = {}
         self.diarization_pipeline = None
 
     def setup(self):
@@ -25,7 +26,7 @@ class Predictor:
         
         for model_name in model_names:
             logging.info(f"Loading model: {model_name}")
-            self.models[model_name] = whisperx.load_model(model_name, device, language="en" compute_type=compute_type,
+            self.models[model_name] = whisperx.load_model(model_name, device, language="en", compute_type=compute_type,
                 asr_options={
                     "max_new_tokens": 128,
                     "clip_timestamps": True,
@@ -69,9 +70,15 @@ class Predictor:
         
         if language not in self.align_models:
             logging.info(f"Loading alignment model for language: {language}")
-            self.align_models[language], metadata = whisperx.load_align_model(language_code=language, device=device)
+            try:
+                self.align_models[language], self.align_metadata[language] = whisperx.load_align_model(language_code=language, device=device)
+            except Exception as e:
+                logging.error(f"Error loading alignment model for language {language}: {str(e)}")
+                raise
         
         align_model = self.align_models[language]
+        metadata = self.align_metadata[language]
+        
         logging.info("Aligning")
         try:
             result = whisperx.align(result["segments"], align_model, metadata, audio_data, device, return_char_alignments=False)
