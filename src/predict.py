@@ -1,11 +1,11 @@
 import logging
 import json
-from concurrent.futures import ThreadPoolExecutor
-import numpy as np
+# from concurrent.futures import ThreadPoolExecutor
+# import numpy as np
 import torch
 import os
 import whisperx
-from pyannote.audio import Pipeline
+# from pyannote.audio import Pipeline
 import pandas as pd
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -30,15 +30,18 @@ class Predictor:
                 asr_options={
                     "max_new_tokens": 128,
                     "clip_timestamps": True,
-                    "hallucination_silence_threshold": 2.0,
-                    "hotwords": []
+                    "hallucination_silence_threshold": 2.0
                 })
         
         logging.info("Loading diarization pipeline")
-        self.diarization_pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1",
-                                         use_auth_token=os.environ.get("HUGGING_FACE_HUB_TOKEN"))
-        if device == "cuda":
-            self.diarization_pipeline.to(torch.device("cuda"))
+        # self.diarization_pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1",
+                                        #  use_auth_token=os.environ.get("HUGGING_FACE_HUB_TOKEN"))
+        # if device == "cuda":
+        #     self.diarization_pipeline.to(torch.device("cuda"))
+        
+        self.diarization_pipeline = whisperx.DiarizationPipeline(use_auth_token=os.environ.get("HUGGING_FACE_HUB_TOKEN"), device=device)
+
+
         logging.info("Setup completed")
 
     def predict(
@@ -67,7 +70,8 @@ class Predictor:
         if language is None:
             language = result["language"]
         logging.info(f"Using language: {language}")
-        
+
+        # 2. Align whisper output
         if language not in self.align_models:
             logging.info(f"Loading alignment model for language: {language}")
             try:
@@ -78,7 +82,7 @@ class Predictor:
         
         align_model = self.align_models[language]
         metadata = self.align_metadata[language]
-        
+
         logging.info("Aligning")
         try:
             result = whisperx.align(result["segments"], align_model, metadata, audio_data, device, return_char_alignments=False)
@@ -86,8 +90,12 @@ class Predictor:
         except Exception as e:
             logging.error(f"Error during alignment: {str(e)}")
             raise
-        
+
+        # delete model if low on GPU resources
+        # import gc; gc.collect(); torch.cuda.empty_cache(); del model_a
+
         if diarize:
+            # 3. Assign speaker labels
             logging.info("Starting diarization")
             diarize_kwargs = {}
             if num_speakers is not None:
@@ -100,21 +108,22 @@ class Predictor:
             
             try:
                 diarization = self.diarization_pipeline(audio, **diarize_kwargs)
-                logging.info(f"Diarization result type: {type(diarization)}")
+                # logging.info(f"Diarization result type: {type(diarization)}")
                 logging.info(f"Diarization result: {diarization}")
                 
-                diarize_df = self.convert_diarization_to_dataframe(diarization)
-                logging.debug(f"Converted diarization dataframe: {diarize_df}")
+                # diarize_df = self.convert_diarization_to_dataframe(diarization)
+                # logging.debug(f"Converted diarization dataframe: {diarize_df}")
                 
-                logging.info("Assigning word speakers")
-                result = whisperx.assign_word_speakers(diarize_df, result)
+                # logging.info("Assigning word speakers")
+                # result = whisperx.assign_word_speakers(diarize_df, result)
+                result = whisperx.assign_word_speakers(diarization, result)
                 logging.debug(f"Result after speaker assignment: {json.dumps(result, indent=2)}")
             except Exception as e:
                 logging.error(f"Error during diarization or speaker assignment: {str(e)}")
                 raise
-        
-        logging.info("Formatting result")
-        return self.format_result(result)
+        return result
+        # logging.info("Formatting result")
+        # return self.format_result(result)
 
     def convert_diarization_to_dataframe(self, diarization):
         segments = []

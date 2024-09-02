@@ -1,6 +1,6 @@
 {
     "input": {
-        "audio": "https://firebasestorage.googleapis.com/v0/b/nimble-yen-429712-p7.appspot.com/o/VOXTAB_legal_audio20.wav?alt=media&token=7e360b68-3b9c-47d7-967b-947c7430c6d8",
+        "audio": "https://bot.tundraa.ru/examples/example1.mp3",
         "diarize": true,
         "language": "en",
         "min_speakers": 1,
