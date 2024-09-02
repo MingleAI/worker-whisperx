@@ -1,12 +1,12 @@
 <div align="center">
 
-<h1>Faster Whisper | Worker</h1>
+<h1>WhisperX | Worker</h1>
 
-This repository contains the [Faster Whisper](https://github.com/guillaumekln/faster-whisper) Worker for RunPod. The Whisper Worker is designed to process audio files using various Whisper models, with options for transcription formatting, language translation, and more. It's part of the RunPod Workers collection aimed at providing diverse functionality for endpoint processing.
+This repository contains the [WhisperX](https://github.com/m-bain/whisperX) Worker for RunPod. The WhisperX Worker is designed to process audio files using various WhisperX models, with options for transcription formatting, language translation, and more. It's part of the RunPod Workers collection aimed at providing diverse functionality for endpoint processing.
 
-[Endpoint Docs](https://docs.runpod.io/reference/faster-whisper)
+[Endpoint Docs](https://docs.runpod.io/)
 
-[Docker Image](https://hub.docker.com/r/runpod/ai-api-faster-whisper)
+[Docker Image](https://hub.docker.com/r/minglesai/runpod:v13)
 
 </div>
 
@@ -16,7 +16,7 @@ This repository contains the [Faster Whisper](https://github.com/guillaumekln/fa
 |-------------------------------------|-------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `audio`                             | Path  | Audio file                                                                                                                                               |
 | `audio_base64`                      | str   | Base64-encoded audio file                                                                                                                                |
-| `model`                             | str   | Choose a Whisper model. Choices: "tiny", "base", "small", "medium", "large-v1", "large-v2", "large-v3". Default: "base"                                  |
+| `model`                             | str   | Choose a WhisperX model. Choices: "tiny", "base", "small", "medium", "large-v1", "large-v2", "large-v3". Default: "base"                                  |
 | `transcription`                     | str   | Choose the format for the transcription. Choices: "plain_text", "formatted_text", "srt", "vtt". Default: "plain_text"                                    |
 | `translate`                         | bool  | Translate the text to English when set to True. Default: False                                                                                           |
 | `translation`                       | str   | Choose the format for the translation. Choices: "plain_text", "formatted_text", "srt", "vtt". Default: "plain_text"                                      |
@@ -81,4 +81,4 @@ The following inputs can be used for testing the model:
 ```
 
 
-DOCKER_BUILDKIT=1 docker build -t minglesai/runpod:v1 .
+DOCKER_BUILDKIT=1 docker build -t minglesai/runpod:v13 .

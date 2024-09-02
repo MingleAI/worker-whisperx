@@ -26,7 +26,7 @@ class Predictor:
         
         for model_name in model_names:
             logging.info(f"Loading model: {model_name}")
-            self.models[model_name] = whisperx.load_model(model_name, device, language="en", compute_type=compute_type,
+            self.models[model_name] = whisperx.load_model(model_name, device, compute_type=compute_type,
                 asr_options={
                     "max_new_tokens": 128,
                     "clip_timestamps": True,
@@ -127,6 +127,7 @@ class Predictor:
 
     def convert_diarization_to_dataframe(self, diarization):
         segments = []
+
         for segment, _, speaker in diarization.itertracks(yield_label=True):
             segments.append({
                 'segment': segment,
